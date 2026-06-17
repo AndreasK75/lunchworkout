@@ -136,6 +136,7 @@
       height: 64px;
       border-radius: 50%;
       background: var(--accent);
+      color: var(--bg);
       border: none;
       cursor: pointer;
       margin: 24px auto;
@@ -223,9 +224,13 @@
       return `${m}:${String(s).padStart(2, '0')}`;
     }
 
-    const playIcon = '<svg width="24" height="24" viewBox="0 0 24 24" fill="var(--bg)"><polygon points="6,3 20,12 6,21"/></svg>';
+    const playIcon = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="6,3 20,12 6,21"/></svg>';
 
+    // --- Mutable timer state ---
     let animFrameId = null;
+    let startTime = null;
+    let totalDuration = 0;
+    let lastAnnouncedThreshold = null;
 
     function renderSession() {
       if (animFrameId) {
@@ -250,7 +255,7 @@
         actionBtn.classList.add('hidden');
       } else if (state === 'completed') {
         timeSelector.classList.add('hidden');
-        const label = currentSession < 2 ? 'Next' : 'Restart';
+        const label = currentSession < sessions.length - 1 ? 'Next' : 'Restart';
         actionBtn.className = 'action-btn next-btn';
         actionBtn.textContent = label;
         actionBtn.classList.remove('hidden');
@@ -273,7 +278,7 @@
       if (state === 'ready') {
         startTimer();
       } else if (state === 'completed') {
-        if (currentSession < 2) {
+        if (currentSession < sessions.length - 1) {
           currentSession++;
           state = 'ready';
           renderSession();
@@ -290,6 +295,7 @@
     function startTimer() {
       state = 'running';
       renderSession();
+      // Timer logic added in next task
       setTimeout(() => { state = 'completed'; renderSession(); }, 1000);
     }
 
