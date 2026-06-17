@@ -283,6 +283,19 @@
       </svg>
       <span id="voice-label">Voice on</span>
     </button>
+
+    <button class="voice-toggle" id="wake-toggle">
+      <svg id="wake-icon-on" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+      </svg>
+      <svg id="wake-icon-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+      </svg>
+      <span id="wake-label">Screen lock off</span>
+    </button>
   </div>
 
   <script>
@@ -425,6 +438,60 @@
       voiceIconOff.classList.toggle('hidden', voiceEnabled);
       voiceLabel.textContent = voiceEnabled ? 'Voice on' : 'Voice off';
       if (!voiceEnabled && window.speechSynthesis) speechSynthesis.cancel();
+    });
+
+    // --- Screen Wake Lock ---
+    const wakeToggle = document.getElementById('wake-toggle');
+    const wakeIconOn = document.getElementById('wake-icon-on');
+    const wakeIconOff = document.getElementById('wake-icon-off');
+    const wakeLabel = document.getElementById('wake-label');
+    let wakeLock = null;
+
+    if (!('wakeLock' in navigator)) {
+      wakeToggle.style.display = 'none';
+    }
+
+    async function requestWakeLock() {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => {
+          wakeLock = null;
+          updateWakeUI(false);
+        });
+        updateWakeUI(true);
+      } catch (e) {
+        updateWakeUI(false);
+      }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release();
+        wakeLock = null;
+      }
+      updateWakeUI(false);
+    }
+
+    function updateWakeUI(on) {
+      wakeToggle.classList.toggle('active', on);
+      wakeIconOn.classList.toggle('hidden', !on);
+      wakeIconOff.classList.toggle('hidden', on);
+      wakeLabel.textContent = on ? 'Screen lock off' : 'Screen lock on';
+    }
+
+    wakeToggle.addEventListener('click', () => {
+      if (wakeLock) {
+        releaseWakeLock();
+      } else {
+        requestWakeLock();
+      }
+    });
+
+    // Re-acquire wake lock when tab becomes visible again
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && wakeLock === null && wakeToggle.classList.contains('active')) {
+        requestWakeLock();
+      }
     });
 
     function speak(text) {
