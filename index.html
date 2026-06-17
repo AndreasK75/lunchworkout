@@ -228,11 +228,12 @@
     .voice-toggle {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 10px;
       cursor: pointer;
       color: var(--text-muted);
       font-size: 14px;
-      padding: 8px 16px;
+      padding: 8px;
       border-radius: 20px;
       background: var(--surface);
       border: none;
@@ -314,7 +315,6 @@
         <line x1="23" y1="9" x2="17" y2="15"></line>
         <line x1="17" y1="9" x2="23" y2="15"></line>
       </svg>
-      <span id="voice-label">Voice on</span>
     </button>
     <button class="voice-toggle" id="wake-toggle">
       <svg id="wake-icon-on" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -326,7 +326,6 @@
         <line x1="12" y1="18" x2="12.01" y2="18"></line>
         <line x1="1" y1="1" x2="23" y2="23"></line>
       </svg>
-      <span id="wake-label">Screen lock off</span>
     </button>
     <button class="theme-btn" id="theme-toggle">
       <svg id="theme-icon-sun" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -478,14 +477,12 @@
     const voiceToggle = document.getElementById('voice-toggle');
     const voiceIconOn = document.getElementById('voice-icon-on');
     const voiceIconOff = document.getElementById('voice-icon-off');
-    const voiceLabel = document.getElementById('voice-label');
 
     voiceToggle.addEventListener('click', () => {
       voiceEnabled = !voiceEnabled;
       voiceToggle.classList.toggle('active', voiceEnabled);
       voiceIconOn.classList.toggle('hidden', !voiceEnabled);
       voiceIconOff.classList.toggle('hidden', voiceEnabled);
-      voiceLabel.textContent = voiceEnabled ? 'Voice on' : 'Voice off';
       if (!voiceEnabled && window.speechSynthesis) speechSynthesis.cancel();
     });
 
@@ -493,7 +490,6 @@
     const wakeToggle = document.getElementById('wake-toggle');
     const wakeIconOn = document.getElementById('wake-icon-on');
     const wakeIconOff = document.getElementById('wake-icon-off');
-    const wakeLabel = document.getElementById('wake-label');
     let wakeLock = null;
 
     if (!('wakeLock' in navigator)) {
@@ -525,7 +521,6 @@
       wakeToggle.classList.toggle('active', on);
       wakeIconOn.classList.toggle('hidden', !on);
       wakeIconOff.classList.toggle('hidden', on);
-      wakeLabel.textContent = on ? 'Screen lock off' : 'Screen lock on';
     }
 
     wakeToggle.addEventListener('click', () => {
