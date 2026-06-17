@@ -51,9 +51,14 @@
       background: var(--surface);
       color: var(--text-muted);
       font-size: 15px;
-      cursor: default;
+      cursor: pointer;
       border: 1px solid transparent;
       user-select: none;
+      transition: opacity 0.15s ease;
+    }
+
+    .pill:active {
+      opacity: 0.7;
     }
 
     .pill.active {
@@ -186,6 +191,25 @@
       transform: scale(0.95);
     }
 
+    .cancel-btn {
+      background: none;
+      border: 1px solid var(--text-muted);
+      color: var(--text-muted);
+      padding: 12px 32px;
+      border-radius: 32px;
+      font-size: 16px;
+      font-family: system-ui, sans-serif;
+      cursor: pointer;
+      margin: 24px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cancel-btn:active {
+      opacity: 0.7;
+    }
+
     .hidden {
       display: none;
     }
@@ -218,6 +242,7 @@
         <polygon points="6,3 20,12 6,21" />
       </svg>
     </button>
+    <button class="cancel-btn hidden" id="cancel-btn">Cancel</button>
   </div>
 
   <script>
@@ -243,6 +268,7 @@
     const btnMinus = document.getElementById('btn-minus');
     const btnPlus = document.getElementById('btn-plus');
     const ringProgress = document.getElementById('ring-progress');
+    const cancelBtn = document.getElementById('cancel-btn');
     const CIRCUMFERENCE = 2 * Math.PI * 106;
 
     function formatTime(seconds) {
@@ -281,10 +307,12 @@
         actionBtn.className = 'action-btn';
         actionBtn.innerHTML = playIcon;
         actionBtn.classList.remove('hidden');
+        cancelBtn.classList.add('hidden');
       } else if (state === 'running') {
         timerDisplay.classList.add('running');
         timeSelector.classList.add('fade-out');
         actionBtn.classList.add('hidden');
+        cancelBtn.classList.remove('hidden');
       } else if (state === 'completed') {
         timerDisplay.classList.remove('running');
         timeSelector.classList.add('fade-out');
@@ -292,6 +320,7 @@
         actionBtn.className = 'action-btn next-btn';
         actionBtn.textContent = label;
         actionBtn.classList.remove('hidden');
+        cancelBtn.classList.add('hidden');
       }
     }
 
@@ -323,6 +352,24 @@
         }
         if (window.speechSynthesis) speechSynthesis.cancel();
       }
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      if (state === 'running') {
+        if (window.speechSynthesis) speechSynthesis.cancel();
+        state = 'ready';
+        renderSession();
+      }
+    });
+
+    pills.forEach((pill, i) => {
+      pill.addEventListener('click', () => {
+        if (i === currentSession && state === 'ready') return;
+        if (window.speechSynthesis) speechSynthesis.cancel();
+        currentSession = i;
+        state = 'ready';
+        renderSession();
+      });
     });
 
     function speak(text) {
@@ -386,6 +433,7 @@
       totalDuration = durations[currentSession];
       startTime = performance.now();
       lastAnnouncedThreshold = null;
+      speak('start');
       renderSession();
       tick();
     }
