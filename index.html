@@ -292,11 +292,95 @@
       }
     });
 
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      utterance.rate = 1.0;
+      speechSynthesis.speak(utterance);
+    }
+
+    function timeToWords(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      const parts = [];
+      if (m > 0) parts.push(m === 1 ? 'one minute' : `${m} minutes`);
+      if (s > 0) parts.push(`${s} seconds`);
+      return parts.join(' ') + ' remaining';
+    }
+
+    function announceTime(remaining, displaySeconds) {
+      let threshold = null;
+
+      if (displaySeconds <= 0) {
+        threshold = 0;
+      } else if (displaySeconds <= 5) {
+        threshold = displaySeconds; // 5,4,3,2,1
+      } else if (displaySeconds === 10) {
+        threshold = 10;
+      } else if (displaySeconds === 15) {
+        threshold = 15;
+      } else if (displaySeconds % 30 === 0 && displaySeconds > 15) {
+        threshold = displaySeconds;
+      }
+
+      if (threshold === null) return;
+      if (threshold === lastAnnouncedThreshold) return;
+      if (threshold === totalDuration) return; // Don't announce at start value
+
+      lastAnnouncedThreshold = threshold;
+
+      if (threshold === 0) {
+        if (currentSession === sessions.length - 1) {
+          speak('zero, Well done everybody!');
+        } else {
+          speak('zero, and the session is completed');
+        }
+      } else if (threshold <= 5) {
+        speak(String(threshold));
+      } else if (threshold === 10) {
+        speak('ten');
+      } else if (threshold === 15) {
+        speak('fifteen seconds');
+      } else {
+        speak(timeToWords(threshold));
+      }
+    }
+
     function startTimer() {
       state = 'running';
+      totalDuration = durations[currentSession];
+      startTime = performance.now();
+      lastAnnouncedThreshold = null;
       renderSession();
-      // Timer logic added in next task
-      setTimeout(() => { state = 'completed'; renderSession(); }, 1000);
+      tick();
+    }
+
+    function tick() {
+      const elapsed = (performance.now() - startTime) / 1000;
+      const remaining = Math.max(0, totalDuration - elapsed);
+      const progress = 1 - (remaining / totalDuration);
+
+      // Update timer display (ceiling so it shows 0:01 until truly 0)
+      const displaySeconds = Math.ceil(remaining);
+      timerDisplay.textContent = formatTime(displaySeconds);
+
+      // Update ring
+      ringProgress.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+
+      // Voice announcements
+      announceTime(remaining, displaySeconds);
+
+      if (remaining <= 0) {
+        timerDisplay.textContent = '0:00';
+        ringProgress.style.strokeDashoffset = 0;
+        state = 'completed';
+        renderSession();
+        return;
+      }
+
+      animFrameId = requestAnimationFrame(tick);
     }
 
     renderSession();
