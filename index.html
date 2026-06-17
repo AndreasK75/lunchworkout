@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lunch Workout</title>
+  <style>
+    :root {
+      --bg: #1a1512;
+      --surface: #2a2218;
+      --text-primary: #f5f0ea;
+      --text-muted: #8a7a6a;
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.125);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text-primary);
+      margin: 0;
+      font-family: system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-width: 400px;
+      width: 100%;
+      padding: 32px 16px;
+      box-sizing: border-box;
+    }
+
+    .session-pills {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      padding: 8px 20px;
+      border-radius: 24px;
+      background: var(--surface);
+      color: var(--text-muted);
+      font-size: 15px;
+      cursor: default;
+      border: 1px solid transparent;
+      user-select: none;
+    }
+
+    .pill.active {
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+    }
+
+    .ring-container {
+      position: relative;
+      width: 260px;
+      height: 260px;
+      margin: 32px auto;
+    }
+
+    .ring-track {
+      fill: none;
+      stroke: var(--surface);
+      stroke-width: 24;
+    }
+
+    .ring-progress {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 24;
+      stroke-linecap: round;
+      stroke-dasharray: 666.11; /* 2 * PI * 106 */
+      stroke-dashoffset: 666.11; /* fully empty */
+      transform: rotate(-90deg);
+      transform-origin: center;
+    }
+
+    .timer-display {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      font-size: 52px;
+      font-weight: 200;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .time-selector {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      gap: 16px;
+      justify-content: center;
+    }
+
+    .time-selector span {
+      font-size: 18px;
+      color: var(--text-primary);
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .time-selector button {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--surface);
+      color: var(--text-primary);
+      font-size: 22px;
+      border: none;
+      cursor: pointer;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .time-selector button:hover {
+      opacity: 0.8;
+    }
+
+    .action-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: none;
+      cursor: pointer;
+      margin: 24px auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .action-btn.next-btn {
+      width: auto;
+      height: auto;
+      padding: 16px 40px;
+      border-radius: 32px;
+      font-size: 18px;
+      color: var(--bg);
+      font-weight: 600;
+    }
+
+    .action-btn:hover {
+      opacity: 0.9;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="session-pills">
+      <div class="pill active" id="pill-0">Plankan</div>
+      <div class="pill" id="pill-1">Jägarvila</div>
+      <div class="pill" id="pill-2">Push-ups</div>
+    </div>
+
+    <div class="ring-container">
+      <svg viewBox="0 0 260 260" width="260" height="260">
+        <circle class="ring-track" cx="130" cy="130" r="106" />
+        <circle class="ring-progress" id="ring-progress" cx="130" cy="130" r="106" />
+      </svg>
+      <div class="timer-display" id="timer-display">2:00</div>
+    </div>
+
+    <div class="time-selector" id="time-selector">
+      <button id="btn-minus">−</button>
+      <span id="duration-label">2:00</span>
+      <button id="btn-plus">+</button>
+    </div>
+
+    <button class="action-btn" id="action-btn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="var(--bg)">
+        <polygon points="6,3 20,12 6,21" />
+      </svg>
+    </button>
+  </div>
+
+  <script>
+    const sessions = [
+      { name: 'Plankan', default: 120, min: 15, max: 300, step: 15 },
+      { name: 'Jägarvila', default: 120, min: 15, max: 300, step: 15 },
+      { name: 'Push-ups', default: 30, min: 10, max: 60, step: 10 },
+    ];
+
+    let currentSession = 0;
+    let durations = sessions.map(s => s.default);
+    let state = 'ready'; // 'ready' | 'running' | 'completed'
+
+    const pills = [
+      document.getElementById('pill-0'),
+      document.getElementById('pill-1'),
+      document.getElementById('pill-2'),
+    ];
+    const timerDisplay = document.getElementById('timer-display');
+    const durationLabel = document.getElementById('duration-label');
+    const timeSelector = document.getElementById('time-selector');
+    const actionBtn = document.getElementById('action-btn');
+    const btnMinus = document.getElementById('btn-minus');
+    const btnPlus = document.getElementById('btn-plus');
+    const ringProgress = document.getElementById('ring-progress');
+    const CIRCUMFERENCE = 2 * Math.PI * 106;
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}:${String(s).padStart(2, '0')}`;
+    }
+
+    const playIcon = '<svg width="24" height="24" viewBox="0 0 24 24" fill="var(--bg)"><polygon points="6,3 20,12 6,21"/></svg>';
+
+    let animFrameId = null;
+
+    function renderSession() {
+      if (animFrameId) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+
+      pills.forEach((pill, i) => pill.classList.toggle('active', i === currentSession));
+
+      const dur = durations[currentSession];
+      durationLabel.textContent = formatTime(dur);
+
+      if (state === 'ready') {
+        timerDisplay.textContent = formatTime(dur);
+        timeSelector.classList.remove('hidden');
+        ringProgress.style.strokeDashoffset = CIRCUMFERENCE;
+        actionBtn.className = 'action-btn';
+        actionBtn.innerHTML = playIcon;
+        actionBtn.classList.remove('hidden');
+      } else if (state === 'running') {
+        timeSelector.classList.add('hidden');
+        actionBtn.classList.add('hidden');
+      } else if (state === 'completed') {
+        timeSelector.classList.add('hidden');
+        const label = currentSession < 2 ? 'Next' : 'Restart';
+        actionBtn.className = 'action-btn next-btn';
+        actionBtn.textContent = label;
+        actionBtn.classList.remove('hidden');
+      }
+    }
+
+    btnMinus.addEventListener('click', () => {
+      const s = sessions[currentSession];
+      durations[currentSession] = Math.max(s.min, durations[currentSession] - s.step);
+      renderSession();
+    });
+
+    btnPlus.addEventListener('click', () => {
+      const s = sessions[currentSession];
+      durations[currentSession] = Math.min(s.max, durations[currentSession] + s.step);
+      renderSession();
+    });
+
+    actionBtn.addEventListener('click', () => {
+      if (state === 'ready') {
+        startTimer();
+      } else if (state === 'completed') {
+        if (currentSession < 2) {
+          currentSession++;
+          state = 'ready';
+          renderSession();
+        } else {
+          currentSession = 0;
+          durations = sessions.map(s => s.default);
+          state = 'ready';
+          renderSession();
+        }
+        if (window.speechSynthesis) speechSynthesis.cancel();
+      }
+    });
+
+    function startTimer() {
+      state = 'running';
+      renderSession();
+      setTimeout(() => { state = 'completed'; renderSession(); }, 1000);
+    }
+
+    renderSession();
+  </script>
+</body>
+</html>
