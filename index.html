@@ -117,8 +117,9 @@
       transition: opacity 0.2s ease;
     }
 
-    .time-selector.hidden {
+    .time-selector.fade-out {
       opacity: 0;
+      pointer-events: none;
     }
 
     .time-selector span {
@@ -275,18 +276,18 @@
       if (state === 'ready') {
         timerDisplay.textContent = formatTime(dur);
         timerDisplay.classList.remove('running');
-        timeSelector.classList.remove('hidden');
+        timeSelector.classList.remove('fade-out');
         ringProgress.style.strokeDashoffset = CIRCUMFERENCE;
         actionBtn.className = 'action-btn';
         actionBtn.innerHTML = playIcon;
         actionBtn.classList.remove('hidden');
       } else if (state === 'running') {
         timerDisplay.classList.add('running');
-        timeSelector.classList.add('hidden');
+        timeSelector.classList.add('fade-out');
         actionBtn.classList.add('hidden');
       } else if (state === 'completed') {
         timerDisplay.classList.remove('running');
-        timeSelector.classList.add('hidden');
+        timeSelector.classList.add('fade-out');
         const label = currentSession < sessions.length - 1 ? 'Next' : 'Restart';
         actionBtn.className = 'action-btn next-btn';
         actionBtn.textContent = label;
