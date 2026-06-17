@@ -241,6 +241,10 @@
       transition: color 0.2s ease;
     }
 
+    .voice-toggle.has-label {
+      padding: 8px 16px;
+    }
+
     .voice-toggle.active {
       color: var(--accent);
     }
@@ -316,7 +320,7 @@
         <line x1="17" y1="9" x2="23" y2="15"></line>
       </svg>
     </button>
-    <button class="voice-toggle" id="wake-toggle">
+    <button class="voice-toggle has-label" id="wake-toggle">
       <svg id="wake-icon-on" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
         <line x1="12" y1="18" x2="12.01" y2="18"></line>
@@ -326,6 +330,7 @@
         <line x1="12" y1="18" x2="12.01" y2="18"></line>
         <line x1="1" y1="1" x2="23" y2="23"></line>
       </svg>
+      <span id="wake-label">Screen lock off</span>
     </button>
     <button class="theme-btn" id="theme-toggle">
       <svg id="theme-icon-sun" class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -490,6 +495,7 @@
     const wakeToggle = document.getElementById('wake-toggle');
     const wakeIconOn = document.getElementById('wake-icon-on');
     const wakeIconOff = document.getElementById('wake-icon-off');
+    const wakeLabel = document.getElementById('wake-label');
     let wakeLock = null;
 
     if (!('wakeLock' in navigator)) {
@@ -521,6 +527,7 @@
       wakeToggle.classList.toggle('active', on);
       wakeIconOn.classList.toggle('hidden', !on);
       wakeIconOff.classList.toggle('hidden', on);
+      wakeLabel.textContent = on ? 'Screen lock off' : 'Screen lock on';
     }
 
     wakeToggle.addEventListener('click', () => {
