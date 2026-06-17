@@ -307,7 +307,7 @@
       const parts = [];
       if (m > 0) parts.push(m === 1 ? 'one minute' : `${m} minutes`);
       if (s > 0) parts.push(`${s} seconds`);
-      return parts.join(' ') + ' remaining';
+      return parts.length ? parts.join(' ') + ' remaining' : '';
     }
 
     function announceTime(remaining, displaySeconds) {
@@ -360,26 +360,21 @@
     function tick() {
       const elapsed = (performance.now() - startTime) / 1000;
       const remaining = Math.max(0, totalDuration - elapsed);
-      const progress = 1 - (remaining / totalDuration);
-
-      // Update timer display (ceiling so it shows 0:01 until truly 0)
       const displaySeconds = Math.ceil(remaining);
+
       timerDisplay.textContent = formatTime(displaySeconds);
-
-      // Update ring
-      ringProgress.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
-
-      // Voice announcements
-      announceTime(remaining, displaySeconds);
+      ringProgress.style.strokeDashoffset = CIRCUMFERENCE * (remaining / totalDuration);
 
       if (remaining <= 0) {
         timerDisplay.textContent = '0:00';
         ringProgress.style.strokeDashoffset = 0;
+        announceTime(0, 0);
         state = 'completed';
         renderSession();
         return;
       }
 
+      announceTime(remaining, displaySeconds);
       animFrameId = requestAnimationFrame(tick);
     }
 
