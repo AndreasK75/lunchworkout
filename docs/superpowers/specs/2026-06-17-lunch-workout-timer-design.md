@@ -36,6 +36,8 @@ Single screen, vertically centered:
    - Ready state: Play icon → starts timer
    - Running state: No pause — timer runs to completion once started
    - Completed state: "Next" text button (or "Restart" on last session to redo entire workout)
+5. **Support mobile devices** It is important that the UI support mobile devices. This is the main screen size that will be used.
+6. **Easy to click** Make the buttons and text big, so that it is easy to click and easy to read.
 
 ## States Per Session
 
@@ -67,6 +69,7 @@ Using the Web Speech API (`speechSynthesis`):
 - **At 10 seconds**: "ten"
 - **At 5, 4, 3, 2, 1**: spoken individually
 - **At 0**: "zero, and the session is completed"
+- **At the 0 for the last session**: "zero, Well done everybody!"
 
 Voice language: English.
 
@@ -103,8 +106,8 @@ Voice language: English.
 ## Typography
 
 - Timer: monospace (`'SF Mono', 'Fira Code', 'Courier New', monospace`), ~48–56px, weight 200
-- Session pills: system-ui, 13px
-- Buttons: system-ui, 14–16px
+- Session pills: system-ui, 15px
+- Buttons: system-ui, 16–18px
 
 ## Technical Implementation
 
